@@ -44,7 +44,7 @@ public class SpotifyClient {
                 .setClientSecret(secret)
                 .setRedirectUri(URI.create("http://localhost:8888"))
                 .build();
-        authorize();
+//        authorize();
     }
 
     private void authorize() {
@@ -68,7 +68,7 @@ public class SpotifyClient {
         authorize();
     }
 
-    @EventListener(ApplicationReadyEvent.class)
+//    @EventListener(ApplicationReadyEvent.class)
     public void getArtistsAlbums() throws IOException, ParseException, SpotifyWebApiException {
         reauthorize();
         String bathory = "6rBvjnvdsRxFRSrq1StGOM";
