@@ -1,0 +1,1 @@
+ALTER TABLE bands ALTER COLUMN metal_archives_id TYPE bigint USING metal_archives_id::bigint;

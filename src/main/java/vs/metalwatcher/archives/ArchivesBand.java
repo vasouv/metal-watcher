@@ -2,7 +2,7 @@ package vs.metalwatcher.archives;
 
 import java.util.List;
 
-public record Band(
+public record ArchivesBand(
         String id,
         String name,
         String country,
@@ -13,6 +13,6 @@ public record Band(
         String themes,
         String label,
         String bandCover,
-        List<Album> albums
+        List<ArchivesAlbum> archivesAlbums
 ) {
 }

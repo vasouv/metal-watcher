@@ -1,12 +1,10 @@
-package vs.metalwatcher;
+package vs.metalwatcher.service;
 
 import jakarta.annotation.PostConstruct;
 import org.apache.hc.core5.http.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
@@ -78,7 +76,7 @@ public class SpotifyClient {
         Arrays.stream(albumsSimplified).forEach(album -> {
             String name = album.getName();
             String releaseDate = album.getReleaseDate();
-            LOGGER.info("Album: {}, Release Date: {}", name, releaseDate);
+            LOGGER.info("ArchivesAlbum: {}, Release Date: {}", name, releaseDate);
         });
     }
 

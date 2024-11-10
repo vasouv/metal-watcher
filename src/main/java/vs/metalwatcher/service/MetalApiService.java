@@ -1,4 +1,4 @@
-package vs.metalwatcher;
+package vs.metalwatcher.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
-import vs.metalwatcher.archives.Album;
-import vs.metalwatcher.archives.Band;
+import vs.metalwatcher.archives.ArchivesAlbum;
+import vs.metalwatcher.archives.ArchivesBand;
 
 import java.util.*;
 
@@ -18,31 +18,31 @@ public class MetalApiService {
 
     private final RestClient restClient;
 
-    private final Comparator<Album> byYearDesc = (a1, a2) -> a2.year().compareTo(a1.year());
+    private final Comparator<ArchivesAlbum> byYearDesc = (a1, a2) -> a2.year().compareTo(a1.year());
 
     public MetalApiService(@Value("${metal-api.url}") String metalApiUrl) {
         this.restClient = RestClient.create(metalApiUrl);
     }
 
-    public List<Album> fetchAlbums(String bandId) {
+    public List<ArchivesAlbum> fetchAlbums(String bandId) {
         Objects.requireNonNull(bandId);
-        Band band = fetchBand(bandId);
-        return Optional.ofNullable(band)
-                .map(Band::albums)
+        ArchivesBand archivesBand = fetchBand(bandId);
+        return Optional.ofNullable(archivesBand)
+                .map(ArchivesBand::archivesAlbums)
                 .orElse(Collections.emptyList())
                 .stream()
                 .sorted(byYearDesc)
                 .toList();
     }
 
-    public Band fetchBand(String bandId) {
+    public ArchivesBand fetchBand(String bandId) {
         Objects.requireNonNull(bandId);
         return restClient
                 .get()
                 .uri("/bands/{id}", bandId)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, (resp, requ) -> LOGGER.error("Metal API Error"))
-                .body(Band.class);
+                .body(ArchivesBand.class);
     }
 
 }
