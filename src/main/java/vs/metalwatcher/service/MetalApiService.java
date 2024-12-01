@@ -28,7 +28,7 @@ public class MetalApiService {
         Objects.requireNonNull(bandId);
         ArchivesBand archivesBand = fetchBand(bandId);
         return Optional.ofNullable(archivesBand)
-                .map(ArchivesBand::archivesAlbums)
+                .map(ArchivesBand::albums)
                 .orElse(Collections.emptyList())
                 .stream()
                 .sorted(byYearDesc)

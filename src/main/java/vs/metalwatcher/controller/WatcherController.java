@@ -1,12 +1,11 @@
 package vs.metalwatcher.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import vs.metalwatcher.model.Band;
 import vs.metalwatcher.repository.BandRepository;
+import vs.metalwatcher.service.MetalApiService;
+import vs.metalwatcher.service.UpdateDiscographyService;
 
 import java.util.Optional;
 
@@ -15,9 +14,11 @@ import java.util.Optional;
 public class WatcherController {
 
     private final BandRepository bandRepository;
+    private final UpdateDiscographyService updateDiscographyService;
 
-    public WatcherController(BandRepository bandRepository) {
+    public WatcherController(BandRepository bandRepository, UpdateDiscographyService updateDiscographyService) {
         this.bandRepository = bandRepository;
+        this.updateDiscographyService = updateDiscographyService;
     }
 
     @GetMapping("bands")
@@ -30,6 +31,11 @@ public class WatcherController {
         return bandRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("update")
+    public void update() {
+        updateDiscographyService.update();
     }
 
 }
