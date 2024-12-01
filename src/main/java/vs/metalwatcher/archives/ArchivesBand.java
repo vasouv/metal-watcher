@@ -13,6 +13,6 @@ public record ArchivesBand(
         String themes,
         String label,
         String bandCover,
-        List<ArchivesAlbum> archivesAlbums
+        List<ArchivesAlbum> albums
 ) {
 }

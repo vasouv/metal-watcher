@@ -1,0 +1,1 @@
+ALTER TABLE albums ADD metal_archives_id int4 NULL;

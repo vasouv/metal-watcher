@@ -3,6 +3,8 @@ package vs.metalwatcher.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.StringJoiner;
 
 @Table(name = "bands")
