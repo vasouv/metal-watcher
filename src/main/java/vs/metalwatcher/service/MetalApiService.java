@@ -41,7 +41,15 @@ public class MetalApiService {
                 .get()
                 .uri("/bands/{id}", bandId)
                 .retrieve()
-                .onStatus(HttpStatusCode::isError, (resp, requ) -> LOGGER.error("Metal API Error"))
+                .onStatus(HttpStatusCode::is4xxClientError, (requ, resp) -> {
+                    LOGGER.error("Metal API 4xx Error: " + resp.getStatusText());
+                })
+                .onStatus(HttpStatusCode::is5xxServerError, (requ, resp) -> {
+                    LOGGER.error("Metal API 5xx Error: " + resp.getStatusText());
+                })
+                .onStatus(HttpStatusCode::isError, (requ, resp) -> {
+                    LOGGER.error("Metal API Error" + resp.getStatusText());
+                })
                 .body(ArchivesBand.class);
     }
 
