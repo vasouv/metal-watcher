@@ -1,1 +1,0 @@
-ALTER TABLE albums ADD metal_archives_link varchar NULL;
