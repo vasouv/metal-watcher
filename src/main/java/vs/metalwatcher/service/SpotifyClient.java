@@ -12,8 +12,10 @@ import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.credentials.ClientCredentials;
 import se.michaelthelin.spotify.model_objects.specification.AlbumSimplified;
+import se.michaelthelin.spotify.model_objects.specification.Artist;
 import se.michaelthelin.spotify.model_objects.specification.Paging;
 import se.michaelthelin.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
+import se.michaelthelin.spotify.requests.data.artists.GetArtistRequest;
 import se.michaelthelin.spotify.requests.data.artists.GetArtistsAlbumsRequest;
 
 import java.io.IOException;
@@ -71,7 +73,21 @@ public class SpotifyClient {
         authorize();
     }
 
-    public List<AlbumSimplified> getArtistsAlbums(String artistLink) throws IOException, ParseException, SpotifyWebApiException {
+    public Artist getArtist(String artistLink) {
+        Objects.requireNonNull(artistLink);
+
+        reauthorize();
+
+        GetArtistRequest artistRequest = spotifyApi.getArtist(artistLink).build();
+        try {
+            return artistRequest.execute();
+        } catch (IOException | SpotifyWebApiException | ParseException e) {
+            LOGGER.error("Get Artist Error - {}: {}", e.getClass(), e.getMessage());
+            return null;
+        }
+    }
+
+    public List<AlbumSimplified> getArtistsAlbums(String artistLink) {
         Objects.requireNonNull(artistLink);
 
         reauthorize();
@@ -80,34 +96,33 @@ public class SpotifyClient {
         int offset = 0;
         String next;
 
-        List<AlbumSimplified> albumList = new ArrayList<>();
+        List<AlbumSimplified> albums = new ArrayList<>();
         do {
             GetArtistsAlbumsRequest albumsRequest = spotifyApi.getArtistsAlbums(artistLink).limit(limit).offset(offset).build();
-            Paging<AlbumSimplified> albums = albumsRequest.execute();
-            AlbumSimplified[] albumSimplifieds = albums.getItems();
-            LOGGER.info("Retrieved {} albums from total {} with limit: {} and offset: {}", albumSimplifieds.length, albums.getTotal(), limit, offset);
+            Paging<AlbumSimplified> albumsPage;
+            try {
+                albumsPage = albumsRequest.execute();
 
-            albumList.addAll(Arrays.asList(albumSimplifieds));
+                albums.addAll(Arrays.asList(albumsPage.getItems()));
 
-            next = albums.getNext();
-            offset += limit + 1;
+                next = albumsPage.getNext();
+                offset += limit + 1;
+            } catch (IOException | SpotifyWebApiException | ParseException e) {
+                LOGGER.error("Get Albums Error - {}: {}", e.getClass(), e.getMessage());
+                return albums;
+            }
+
         } while (next != null);
 
-        return albumList;
+        return albums;
     }
 
 //    @EventListener(ApplicationReadyEvent.class)
     public void test() {
         String bathory = "6rBvjnvdsRxFRSrq1StGOM";
-        try {
-            List<AlbumSimplified> artistsAlbums = getArtistsAlbums(bathory);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        } catch (SpotifyWebApiException e) {
-            throw new RuntimeException(e);
-        }
+//        List<AlbumSimplified> artistsAlbums = getArtistsAlbums(bathory);
+        Artist artist = getArtist(bathory);
+        System.out.println(artist);
     }
 
 }
