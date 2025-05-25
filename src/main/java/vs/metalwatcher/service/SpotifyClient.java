@@ -5,26 +5,20 @@ import org.apache.hc.core5.http.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.credentials.ClientCredentials;
-import se.michaelthelin.spotify.model_objects.specification.AlbumSimplified;
-import se.michaelthelin.spotify.model_objects.specification.Artist;
-import se.michaelthelin.spotify.model_objects.specification.Paging;
+import se.michaelthelin.spotify.model_objects.specification.*;
 import se.michaelthelin.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
 import se.michaelthelin.spotify.requests.data.artists.GetArtistRequest;
 import se.michaelthelin.spotify.requests.data.artists.GetArtistsAlbumsRequest;
+import vs.metalwatcher.model.Album;
 
 import java.io.IOException;
 import java.net.URI;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static org.springframework.util.ObjectUtils.isEmpty;
 
@@ -87,7 +81,7 @@ public class SpotifyClient {
         }
     }
 
-    public List<AlbumSimplified> getArtistsAlbums(String artistLink) {
+    public List<Album> getArtistsAlbums(String artistLink) {
         Objects.requireNonNull(artistLink);
 
         reauthorize();
@@ -109,20 +103,30 @@ public class SpotifyClient {
                 offset += limit + 1;
             } catch (IOException | SpotifyWebApiException | ParseException e) {
                 LOGGER.error("Get Albums Error - {}: {}", e.getClass(), e.getMessage());
-                return albums;
+                return Collections.emptyList();
             }
 
         } while (next != null);
 
-        return albums;
+        return albums.stream().map(this::convertAlbumSimplified).toList();
     }
 
-//    @EventListener(ApplicationReadyEvent.class)
-    public void test() {
-        String bathory = "6rBvjnvdsRxFRSrq1StGOM";
-//        List<AlbumSimplified> artistsAlbums = getArtistsAlbums(bathory);
-        Artist artist = getArtist(bathory);
-        System.out.println(artist);
+    private Album convertAlbumSimplified(AlbumSimplified albumSimplified) {
+        Objects.requireNonNull(albumSimplified);
+
+        String band = Arrays.stream(albumSimplified.getArtists())
+                .findFirst()
+                .map(ArtistSimplified::getName)
+                .orElse(null);
+        String title = albumSimplified.getName();
+        String releaseDate = albumSimplified.getReleaseDate();
+        String albumType = albumSimplified.getAlbumType().name();
+        String imageUrl = Arrays.stream(albumSimplified.getImages())
+                .findFirst()
+                .map(Image::getUrl)
+                .orElse(null);
+
+        return new Album(band, title, releaseDate, albumType, imageUrl);
     }
 
 }

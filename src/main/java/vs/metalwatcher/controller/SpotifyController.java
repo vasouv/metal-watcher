@@ -1,8 +1,8 @@
 package vs.metalwatcher.controller;
 
 import org.springframework.web.bind.annotation.*;
-import se.michaelthelin.spotify.model_objects.specification.AlbumSimplified;
 import se.michaelthelin.spotify.model_objects.specification.Artist;
+import vs.metalwatcher.model.Album;
 import vs.metalwatcher.service.SpotifyClient;
 
 import java.util.List;
@@ -24,7 +24,7 @@ public class SpotifyController {
     }
 
     @GetMapping("band/{id}/albums")
-    public List<AlbumSimplified> getAlbums(@PathVariable("id") String id) {
+    public List<Album> getAlbums(@PathVariable("id") String id) {
         return spotifyClient.getArtistsAlbums(id);
     }
 }
