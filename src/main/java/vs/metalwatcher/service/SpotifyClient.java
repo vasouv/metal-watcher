@@ -9,15 +9,16 @@ import org.springframework.stereotype.Service;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.credentials.ClientCredentials;
-import se.michaelthelin.spotify.model_objects.specification.AlbumSimplified;
-import se.michaelthelin.spotify.model_objects.specification.Paging;
+import se.michaelthelin.spotify.model_objects.specification.*;
 import se.michaelthelin.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
+import se.michaelthelin.spotify.requests.data.artists.GetArtistRequest;
 import se.michaelthelin.spotify.requests.data.artists.GetArtistsAlbumsRequest;
+import vs.metalwatcher.model.Album;
 
 import java.io.IOException;
 import java.net.URI;
 import java.time.LocalDateTime;
-import java.util.Arrays;
+import java.util.*;
 
 import static org.springframework.util.ObjectUtils.isEmpty;
 
@@ -42,7 +43,7 @@ public class SpotifyClient {
                 .setClientSecret(secret)
                 .setRedirectUri(URI.create("http://localhost:8888"))
                 .build();
-//        authorize();
+        authorize();
     }
 
     private void authorize() {
@@ -66,18 +67,66 @@ public class SpotifyClient {
         authorize();
     }
 
-//    @EventListener(ApplicationReadyEvent.class)
-    public void getArtistsAlbums() throws IOException, ParseException, SpotifyWebApiException {
+    public Artist getArtist(String artistLink) {
+        Objects.requireNonNull(artistLink);
+
         reauthorize();
-        String bathory = "6rBvjnvdsRxFRSrq1StGOM";
-        GetArtistsAlbumsRequest albumsRequest = spotifyApi.getArtistsAlbums(bathory).limit(20).build();
-        Paging<AlbumSimplified> albums = albumsRequest.execute();
-        AlbumSimplified[] albumsSimplified = albums.getItems();
-        Arrays.stream(albumsSimplified).forEach(album -> {
-            String name = album.getName();
-            String releaseDate = album.getReleaseDate();
-            LOGGER.info("ArchivesAlbum: {}, Release Date: {}", name, releaseDate);
-        });
+
+        GetArtistRequest artistRequest = spotifyApi.getArtist(artistLink).build();
+        try {
+            return artistRequest.execute();
+        } catch (IOException | SpotifyWebApiException | ParseException e) {
+            LOGGER.error("Get Artist Error - {}: {}", e.getClass(), e.getMessage());
+            return null;
+        }
+    }
+
+    public List<Album> getArtistsAlbums(String artistLink) {
+        Objects.requireNonNull(artistLink);
+
+        reauthorize();
+
+        int limit = 50;
+        int offset = 0;
+        String next;
+
+        List<AlbumSimplified> albums = new ArrayList<>();
+        do {
+            GetArtistsAlbumsRequest albumsRequest = spotifyApi.getArtistsAlbums(artistLink).limit(limit).offset(offset).build();
+            Paging<AlbumSimplified> albumsPage;
+            try {
+                albumsPage = albumsRequest.execute();
+
+                albums.addAll(Arrays.asList(albumsPage.getItems()));
+
+                next = albumsPage.getNext();
+                offset += limit + 1;
+            } catch (IOException | SpotifyWebApiException | ParseException e) {
+                LOGGER.error("Get Albums Error - {}: {}", e.getClass(), e.getMessage());
+                return Collections.emptyList();
+            }
+
+        } while (next != null);
+
+        return albums.stream().map(this::convertAlbumSimplified).toList();
+    }
+
+    private Album convertAlbumSimplified(AlbumSimplified albumSimplified) {
+        Objects.requireNonNull(albumSimplified);
+
+        String band = Arrays.stream(albumSimplified.getArtists())
+                .findFirst()
+                .map(ArtistSimplified::getName)
+                .orElse(null);
+        String title = albumSimplified.getName();
+        String releaseDate = albumSimplified.getReleaseDate();
+        String albumType = albumSimplified.getAlbumType().name();
+        String imageUrl = Arrays.stream(albumSimplified.getImages())
+                .findFirst()
+                .map(Image::getUrl)
+                .orElse(null);
+
+        return new Album(band, title, releaseDate, albumType, imageUrl);
     }
 
 }
